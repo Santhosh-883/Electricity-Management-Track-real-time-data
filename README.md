@@ -41,4 +41,3 @@ flask run
 - Uses bcrypt for password hashing
 - Implements CSRF protection
 - Tracks user login activities
-# Electricity-Management---track-Real-time-data
