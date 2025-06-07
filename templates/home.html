@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="/static/custom.css">{% endblock %}
+
+{% block guest_content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card p-5 text-center" style="margin-top: 70px; border-radius: 15px; background: #fff; box-shadow: 0 4px 24px rgba(40,40,80,0.10); border: none;">
+                <h1 class="display-4 mb-4">Electricity Management</h1>
+                <h4 class="mb-4" style="color: #4b5563;">Track, Monitor, and Optimize Your Energy Consumption</h4>
+                
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-person-plus me-2"></i>Sign Up
+                    </a>
+                </div>
+                
+                <hr class="my-4">
+                <div class="text-muted">
+                    <p class="mt-4" style="color: #5b6475;">Monitor your electricity usage, manage devices, and track bills seamlessly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

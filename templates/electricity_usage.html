@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="background: #fff; min-height: 100vh; padding-bottom: 30px;">
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mt-4 mb-3">
+    <h1 class="mb-2 mb-md-0" style="color:#23272f;">Electricity Usage</h1>
+    {% if blynk_devices|length > 0 %}
+    <a href="{{ url_for('download_logs', device_id=selected_device_id or blynk_devices[0].id) }}" class="btn btn-danger" style="font-weight:600;">
+        <i class="bi bi-download"></i> Download Logs
+    </a>
+    {% endif %}
+</div>
+    {% if blynk_devices|length == 0 %}
+    <div class="alert alert-warning mt-4">No devices available. Please register a Blynk device to view and download logs.</div>
+{% endif %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card" style="background: #fff; color: #23272f; border: 1px solid #e3e8ee; box-shadow: 0 4px 24px rgba(40,40,80,0.07);">
+            <div class="card-header" style="background: #f8fafc; color: #23272f; border-bottom: 1px solid #e3e8ee;">
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-2 mb-md-0">
+                        <h3 class="mb-0">Real-time Electricity Monitoring</h3>
+                    </div>
+                    <div class="col-12 col-md-6 text-md-end">
+                        <form id="deviceSelectForm" class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center">
+                            <select name="selected_device" class="form-select mb-2 mb-md-0 me-md-2 w-100 w-md-auto">
+                                <option value="">Select Blynk Device</option>
+                                {% for device in blynk_devices %}
+                                <option value="{{ device.id }}" {% if device.device_name == 'IOT' or device.id == selected_device_id %}selected{% endif %}>
+                                    {{ device.device_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary w-100 w-md-auto">Load Device</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+                <div class="card-body">
+                    {% if blynk_data %}
+                    
+<div class="row">
+                        <div class="col-md-3">
+                            <div class="card usage-card-modern">
+<style>
+.usage-card-modern {
+    background: #fff;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 10px rgba(229,57,53,0.08);
+    border: 2px solid #e53935;
+    margin-bottom: 1.5rem;
+    color: #23272f;
+    transition: box-shadow 0.15s, border 0.15s;
+}
+.usage-card-modern:hover {
+    box-shadow: 0 6px 24px rgba(229,57,53,0.16);
+    border: 2.5px solid #b71c1c;
+}
+.usage-card-modern .card-body h5 {
+    color: #e53935;
+    font-weight: 600;
+}
+.usage-card-modern .card-body h3 {
+    color: #23272f;
+    font-weight: 700;
+}
+.usage-card-modern .card-body {
+    padding: 1.3rem 1.1rem;
+}
+</style>
+                                <div class="card-body text-center">
+                                    <h5>Voltage</h5>
+                                    <h3 id="voltage">{{ blynk_data.voltage or 'N/A' }} V</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card usage-card-modern">
+                                <div class="card-body text-center">
+                                    <h5>Current</h5>
+                                    <h3 id="current">{{ blynk_data.current or 'N/A' }} A</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card usage-card-modern">
+                                <div class="card-body text-center">
+                                    <h5>Power</h5>
+                                    <h3 id="power">{{ blynk_data.power or 'N/A' }} W</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card usage-card-modern">
+                                <div class="card-body text-center">
+                                    <h5>Energy</h5>
+                                    <h3 id="energy">{{ blynk_data.energy or 'N/A' }} kWh</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        Select a Blynk device to view real-time electricity data
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="d-flex flex-row align-items-stretch justify-content-between" style="gap:24px;">
+  <!-- Power Advice Box -->
+      <!-- Power Advice Box -->
+      <div id="power-advice-box" class="advice-box d-flex align-items-center justify-content-center flex-column" style="max-width: 400px; border-radius: 16px; background: #f8fafc; box-shadow: 0 2px 8px #e0e7ef; padding: 20px 16px; text-align: center; flex:1;">
+        <span id="box-advice-status" class="badge bg-secondary mb-2" style="font-size:1.1rem;">STATUS</span><br>
+        <span id="box-advice-message" style="font-size:1.13rem; font-weight:500; color:#1e293b;">Advice message will appear here.</span>
+      </div>
+      <!-- Badge Display Section -->
+      <div id="badge-section" class="d-flex flex-column align-items-center justify-content-center" style="min-width:110px;max-width:130px;gap:8px;">
+  <span style="font-size:1.1rem;font-weight:600;color:#e53935;">Badges</span>
+  <div class="d-flex flex-row flex-wrap justify-content-center align-items-center" style="gap:8px;">
+    <span class="badge rounded-pill bg-primary text-light" style="font-size:1.1rem; border:2px solid #0d6efd; box-shadow:0 2px 8px #0d6efd33;">
+      <i class="bi bi-stars"></i> Welcome Aboard
+    </span>
+    <!-- Original badge logic below (can be restored after debug)
+    <pre>{{ badges|safe }}</pre>
+    {% if badges and badges|length > 0 %}
+      {% for badge in badges %}
+        {% if badge.badge_name == 'Welcome Aboard' %}
+          <span class="badge rounded-pill bg-primary text-light" style="font-size:1.1rem; border:2px solid #0d6efd; box-shadow:0 2px 8px #0d6efd33;">
+            <i class="bi bi-stars"></i> {{ badge.badge_name }}
+          </span>
+        {% else %}
+          <span class="badge rounded-pill bg-success text-light" style="font-size:1rem;">{{ badge.badge_name }}</span>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <span class="badge rounded-pill bg-secondary text-light" style="font-size:1rem;">No badges yet</span>
+    {% endif %}
+    -->
+  </div>
+</div>
+      <!-- Voltage/Current Cards -->
+      <div class="d-flex flex-column align-items-end justify-content-center" style="gap:12px; min-width:130px;">
+        <div class="p-2 bg-white rounded shadow-sm" style="min-width:120px;text-align:center;">
+          <span style="font-weight:600;color:#334155;">Voltage</span><br>
+          <span id="voltage-value" style="font-size:1.3rem;color:#0ea5e9;">--</span> <span style="color:#64748b;font-size:1.1rem;">V</span>
+        </div>
+        <div class="p-2 bg-white rounded shadow-sm" style="min-width:120px;text-align:center;">
+          <span style="font-weight:600;color:#334155;">Current</span><br>
+          <span id="current-value" style="font-size:1.3rem;color:#eab308;">--</span> <span style="color:#64748b;font-size:1.1rem;">A</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header" style="background: #f8fafc; color: #23272f; border-bottom: 1px solid #e3e8ee;">
+                <h3>Power and Energy Trend (Live)</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="usageChart" height="300"></canvas>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center justify-content-between" style="background: #f8fafc; color: #23272f; border-bottom: 1px solid #e3e8ee;">
+                <h3 class="mb-0">Week Trend</h3>
+                <span id="week-trend-indicator" class="fw-bold" style="font-size:1.1rem;"></span>
+            </div>
+            <div class="card-body">
+                <canvas id="weekTrendChart" height="200"></canvas>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center justify-content-between" style="background: #f8fafc; color: #23272f; border-bottom: 1px solid #e3e8ee;">
+                <h3 class="mb-0">Month Trend</h3>
+                <span id="month-trend-indicator" class="fw-bold" style="font-size:1.1rem;"></span>
+            </div>
+            <div class="card-body">
+                <canvas id="monthTrendChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card" style="background: #fff; color: #23272f; border: 1px solid #e3e8ee; box-shadow: 0 4px 24px rgba(40,40,80,0.07);">
+            <div class="card-header" style="background: #f8fafc; color: #23272f; border-bottom: 1px solid #e3e8ee;">
+                <h3>Usage Summary</h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Current Month Usage
+                        <span class="badge bg-primary rounded-pill" id="summary-month-usage">-- kWh</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Average Daily Usage
+                        <span class="badge bg-primary rounded-pill" id="summary-avg-daily">-- kWh</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+    Peak Usage Date
+    <span class="badge bg-warning rounded-pill" id="summary-peak-time">--</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-cloud-sun-fill text-info"></i> CO₂ Emission</span>
+    <span class="badge bg-dark rounded-pill" id="summary-co2">-- kg</span>
+</li>
+                </ul>
+            <!-- Device Switch Button -->
+            <div class="mt-3 d-flex align-items-center justify-content-between">
+                <span>Device State: <span id="device-switch-status">OFF</span></span>
+                <button id="device-switch-btn" class="btn btn-outline-primary" data-state="0">Turn ON</button>
+            </div>
+            <!-- End Device Switch Button -->
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+{% block extra_css %}<link rel="stylesheet" href="/static/custom.css">{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/device_switch.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+      new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Power Advice Logic
+    // Persistent "Very High" logic for Power Advice
+    // Persistent stateful power advice logic
+    let currentAdvice = null;
+    // Robust persistent warning logic for power advice
+    function getAdviceLevel(power) {
+        if (power > 80) return 'very_high';
+        if (power > 50) return 'high';
+        if (power > 20) return 'moderate';
+        return 'low';
+    }
+    function setAdvice(level) {
+        const status = document.getElementById('box-advice-status');
+        const message = document.getElementById('box-advice-message');
+        if (!status || !message) return;
+        let text, badgeClass, msg, color;
+        if (level === 'very_high') {
+            text = 'Very High'; badgeClass = 'bg-danger'; msg = 'Power usage is VERY HIGH! Take immediate action.'; color = '#dc2626';
+        } else if (level === 'high') {
+            text = 'High'; badgeClass = 'bg-warning'; msg = 'Power usage is HIGH. Monitor closely.'; color = '#eab308';
+        } else if (level === 'moderate') {
+            text = 'Moderate'; badgeClass = 'bg-info'; msg = 'Power usage is moderate.'; color = '#0ea5e9';
+        } else {
+            text = 'Low'; badgeClass = 'bg-secondary'; msg = 'Power usage is low.'; color = '#1e293b';
+        }
+        status.textContent = text;
+        status.className = 'badge mb-2 ' + badgeClass;
+        status.style.fontSize = '1.1rem';
+        message.textContent = msg;
+        message.style.color = color;
+    }
+    // Latching sticky warning logic for power advice
+    let stickyLevel = null;
+    function updatePowerAdvice(power) {
+        // Upgrade or downgrade immediately based on the current power
+        if (power > 80) {
+            if (stickyLevel !== 'very_high') {
+                setAdvice('very_high');
+                stickyLevel = 'very_high';
+            }
+        } else if (power > 50) {
+            if (stickyLevel !== 'high') {
+                setAdvice('high');
+                stickyLevel = 'high';
+            }
+        } else if (power > 20) {
+            if (stickyLevel !== 'moderate') {
+                setAdvice('moderate');
+                stickyLevel = 'moderate';
+            }
+        } else {
+            if (stickyLevel !== 'low') {
+                setAdvice('low');
+                stickyLevel = 'low';
+            }
+        }
+    }
+
+
+    // Ensure Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        alert('Chart.js failed to load. Please check your internet connection.');
+        return;
+    }
+
+    // Get chart canvases safely
+    const usageCanvas = document.getElementById('usageChart');
+    const weekCanvas = document.getElementById('weekTrendChart');
+    const monthCanvas = document.getElementById('monthTrendChart');
+    if (!usageCanvas || !weekCanvas || !monthCanvas) {
+        alert('One or more chart canvases are missing from the page.');
+        return;
+    }
+
+    const ctx = usageCanvas.getContext('2d');
+    const weekCtx = weekCanvas.getContext('2d');
+    const monthCtx = monthCanvas.getContext('2d');
+
+    // Chart data arrays
+    let usageLabels = ['Start'];
+    let usagePowerData = [0];
+    let usageEnergyData = [0];
+    let weekLabels = ['Start'];
+    let weekPowerData = [0];
+    let weekEnergyData = [0];
+    let monthLabels = ['Start'];
+    let monthPowerData = [0];
+    let monthEnergyData = [0];
+
+    // Chart objects
+    const powerEnergyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: usageLabels,
+            datasets: [
+                { label: 'Power (W)', data: usagePowerData, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.18)', yAxisID: 'y-power', tension: 0.1 },
+                { label: 'Energy (kWh)', data: usageEnergyData, borderColor: '#ff9800', backgroundColor: 'rgba(255,152,0,0.18)', yAxisID: 'y-energy', tension: 0.1 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            plugins: { tooltip: { enabled: true } },
+            scales: {
+                'y-power': { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Power (W)' }, beginAtZero: true, min: 0, max: 100 },
+                'y-energy': { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Energy (kWh)' }, beginAtZero: true, min: 0, max: 1, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+    // (Removed duplicate chart initializations and variable declarations here)
+
+
+
+    const weekTrendChart = new Chart(weekCtx, {
+        type: 'line',
+        data: {
+            labels: weekLabels,
+            datasets: [
+                {
+                    label: 'Power (W)',
+                    data: weekPowerData,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.18)',
+                    yAxisID: 'y-power',
+                    tension: 0.1
+                },
+                {
+                    label: 'Energy (kWh)',
+                    data: weekEnergyData,
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255, 152, 0, 0.18)',
+                    yAxisID: 'y-energy',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            plugins: { tooltip: { enabled: true } },
+            scales: {
+                'y-power': { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Power (W)' }, beginAtZero: true, min: 0, max: 100 },
+                'y-energy': { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Energy (kWh)' }, beginAtZero: true, min: 0, max: 1, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+    const monthTrendChart = new Chart(monthCtx, {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [
+                {
+                    label: 'Power (W)',
+                    data: monthPowerData,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.18)',
+                    yAxisID: 'y-power',
+                    tension: 0.1
+                },
+                {
+                    label: 'Energy (kWh)',
+                    data: monthEnergyData,
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255, 152, 0, 0.18)',
+                    yAxisID: 'y-energy',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            plugins: { tooltip: { enabled: true } },
+            scales: {
+                'y-power': { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Power (W)' }, beginAtZero: true, min: 0, max: 100 },
+                'y-energy': { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Energy (kWh)' }, beginAtZero: true, min: 0, max: 1, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+
+    // Intercept form submit to load data via AJAX
+    const deviceSelectForm = document.getElementById('deviceSelectForm');
+    deviceSelectForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        updateData();
+        updateWeekChart();
+        updateMonthChart();
+    });
+
+    function updateWeekChart() {
+        const selectedDevice = document.querySelector('select[name="selected_device"]').value;
+        if (!selectedDevice) return;
+        fetch(`/api/device-weekly?device_id=${selectedDevice}`)
+            .then(response => response.json())
+            .then(data => {
+                weekTrendChart.data.labels = data.map(d => d.label);
+                weekTrendChart.data.datasets[0].data = data.map(d => d.power);
+                weekTrendChart.data.datasets[1].data = data.map(d => d.energy);
+                weekTrendChart.update('none');
+                updatePeakUsageTimeFromWeek(data);
+                updateWeekTrendIndicator(data);
+            });
+    }
+
+    function updateWeekTrendIndicator(data) {
+        const indicator = document.getElementById('week-trend-indicator');
+        if (!indicator || !data || data.length < 2) {
+            indicator.innerHTML = '<div class="table-responsive"><table class="table" aria-describedby="cost-breakdown-table"></i> <span class="text-muted">Flat</span></table></div>';
+            return;
+        }
+        const prev = parseFloat(data[data.length-2].power);
+        const curr = parseFloat(data[data.length-1].power);
+        if (isNaN(prev) || isNaN(curr)) {
+            indicator.innerHTML = '<div class="table-responsive"><table class="table" aria-describedby="cost-breakdown-table"></i> <span class="text-muted">Flat</span></table></div>';
+            return;
+        }
+        if (curr > prev) {
+            indicator.innerHTML = '<i class="bi bi-arrow-up text-danger"></i> <span class="text-danger">Up</span>';
+        } else if (curr < prev) {
+            indicator.innerHTML = '<i class="bi bi-arrow-down text-success"></i> <span class="text-success">Down</span>';
+        } else {
+            indicator.innerHTML = '<div class="table-responsive"><table class="table" aria-describedby="cost-breakdown-table"></i> <span class="text-muted">Flat</span></table></div>';
+        }
+    }
+
+    function updatePeakUsageTimeFromWeek(data) {
+        // Find the day with the highest power usage
+        let peakDay = '--';
+        let peakValue = -Infinity;
+        data.forEach(d => {
+            if (parseFloat(d.power) > peakValue) {
+                peakValue = parseFloat(d.power);
+                peakDay = d.label;
+            }
+        });
+        document.getElementById('summary-peak-time').textContent = peakDay !== '--' ? peakDay : '--';
+    }
+
+    function updateMonthChart() {
+        const selectedDevice = document.querySelector('select[name="selected_device"]').value;
+        if (!selectedDevice) return;
+        fetch(`/api/device-monthly?device_id=${selectedDevice}`)
+            .then(response => response.json())
+            .then(data => {
+                monthTrendChart.data.labels = data.map(d => d.label);
+                monthTrendChart.data.datasets[0].data = data.map(d => d.power);
+                monthTrendChart.data.datasets[1].data = data.map(d => d.energy);
+                monthTrendChart.update('none');
+                updateUsageSummaryFromMonth(data);
+                updateMonthTrendIndicator(data);
+            });
+    }
+
+    function updateMonthTrendIndicator(data) {
+        const indicator = document.getElementById('month-trend-indicator');
+        if (!indicator || !data || data.length < 2) {
+            indicator.innerHTML = '<div class="table-responsive"><table class="table" aria-describedby="cost-breakdown-table"></i> <span class="text-muted">Flat</span></table></div>';
+            return;
+        }
+        const prev = parseFloat(data[data.length-2].power);
+        const curr = parseFloat(data[data.length-1].power);
+        if (isNaN(prev) || isNaN(curr)) {
+            indicator.innerHTML = '<div class="table-responsive"><table class="table" aria-describedby="cost-breakdown-table"></i> <span class="text-muted">Flat</span></table></div>';
+            return;
+        }
+        if (curr > prev) {
+            indicator.innerHTML = '<i class="bi bi-arrow-up text-danger"></i> <span class="text-danger">Up</span>';
+        } else if (curr < prev) {
+            indicator.innerHTML = '<i class="bi bi-arrow-down text-success"></i> <span class="text-success">Down</span>';
+        } else {
+            indicator.innerHTML = '<div class="table-responsive"><table class="table" aria-describedby="cost-breakdown-table"></i> <span class="text-muted">Flat</span></table></div>';
+        }
+    }
+
+    function updateUsageSummaryFromMonth(data) {
+        const totalEnergy = data.reduce((sum, d) => sum + (parseFloat(d.energy) || 0), 0);
+        document.getElementById('summary-month-usage').textContent = `${totalEnergy.toFixed(2)} kWh`;
+        const avgDaily = data.length ? totalEnergy / data.length : 0;
+        document.getElementById('summary-avg-daily').textContent = `${avgDaily.toFixed(2)} kWh`;
+        const co2 = (totalEnergy / 1000) * 0.82;
+        document.getElementById('summary-co2').textContent = `${co2.toFixed(2)} kg`;
+    }
+
+
+    const MAX_DATA_POINTS = 24; 
+    const UPDATE_INTERVAL = 10000; 
+    const GRAPH_UPDATE_INTERVAL = 3600000; 
+
+    const errorAlert = document.createElement('div');
+    errorAlert.className = 'alert alert-danger mt-3 d-none';
+    document.querySelector('.container-fluid').prepend(errorAlert);
+
+    function updateData() {
+        const selectedDevice = document.querySelector('select[name="selected_device"]').value;
+        const dataCards = [
+            { id: 'voltage', unit: 'V', defaultValue: 0 },
+            { id: 'current', unit: 'A', defaultValue: 0 },
+            { id: 'power', unit: 'W', defaultValue: 0 },
+            { id: 'energy', unit: 'kWh', defaultValue: 0 }
+        ];
+
+        if (!selectedDevice) {
+            errorAlert.textContent = 'Please select a device';
+            errorAlert.classList.remove('d-none');
+            return;
+        }
+
+        fetch(`/electricity-usage?selected_device=${selectedDevice}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            errorAlert.classList.add('d-none');
+
+            dataCards.forEach(card => {
+                const element = document.getElementById(card.id);
+                if (element) {
+                    const value = data[card.id];
+                    element.textContent = (value !== undefined && value !== null && value !== '') ? 
+                        `${parseFloat(value).toFixed(2)} ${card.unit}` : 
+                        `${card.defaultValue} ${card.unit}`;
+                }
+            });
+
+            const now = new Date().toLocaleTimeString();
+            powerEnergyChart.data.labels.push(now);
+            powerEnergyChart.data.datasets[0].data.push(data.power || 0);
+            powerEnergyChart.data.datasets[1].data.push(data.energy || 0);
+            if (powerEnergyChart.data.labels.length > MAX_DATA_POINTS) {
+                powerEnergyChart.data.labels.shift();
+                powerEnergyChart.data.datasets[0].data.shift();
+                powerEnergyChart.data.datasets[1].data.shift();
+            }
+            powerEnergyChart.update('none');
+
+            // Update Power Advice Box
+            updatePowerAdvice(data.power || 0);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            errorAlert.textContent = `Error: Unable to fetch device data. ${error.message}`;
+            errorAlert.classList.remove('d-none');
+
+            dataCards.forEach(card => {
+                const element = document.getElementById(card.id);
+                if (element) {
+                    element.textContent = `${card.defaultValue} ${card.unit}`;
+                }
+            });
+        });
+    }
+
+    const dataUpdateInterval = setInterval(updateData, UPDATE_INTERVAL);
+
+    // Initial load
+    updateData();
+    updateWeekChart();
+    updateMonthChart();
+});
+
+</script>
+{% endblock %}

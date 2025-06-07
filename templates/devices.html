@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="/static/custom.css">{% endblock %}
+
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+<div class="container-fluid">
+    <h1 class="mt-4">Registered Devices</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card" style="background: #fff; color: #23272f; border: 1px solid #e3e8ee; box-shadow: 0 4px 24px rgba(40,40,80,0.07);">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #fff; color: #23272f; border-bottom: 1px solid #e3e8ee;">
+                    <h3>Device List</h3>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
+                        Add New Device
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+<table class="table table-striped" style="background: #fff; color: #23272f;">
+                        <thead>
+                            <tr>
+                                <th>Device Name</th>
+                                <th>Type</th>
+                                <th>Power Consumption</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if blynk_devices and blynk_devices|length > 0 %}
+                                {% for device in blynk_devices %}
+                                <tr>
+                                    <td>{{ device.device_name }}</td>
+                                    <td>{{ device.auth_token[:10] }}...</td>
+                                    <td>V0:{{ device.virtual_pin_voltage }}, V1:{{ device.virtual_pin_current }}, V2:{{ device.virtual_pin_power }}, V3:{{ device.virtual_pin_energy }}</td>
+                                    <td>-</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('remove_device', device_id=device.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remove this device?');">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr><td colspan="5" class="text-center">No devices registered.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Blynk Device Modal -->
+<div class="modal fade" id="addBlynkDeviceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Register Blynk Device</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('register_blynk_device') }}">
+    {{ blynk_device_form.hidden_tag() }}
+                    {{ blynk_device_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ blynk_device_form.device_name.label(class="form-label") }}
+                        {{ blynk_device_form.device_name(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ blynk_device_form.auth_token.label(class="form-label") }}
+                        {{ blynk_device_form.auth_token(class="form-control") }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ blynk_device_form.virtual_pin_voltage.label(class="form-label") }}
+                            {{ blynk_device_form.virtual_pin_voltage(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ blynk_device_form.virtual_pin_current.label(class="form-label") }}
+                            {{ blynk_device_form.virtual_pin_current(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ blynk_device_form.virtual_pin_power.label(class="form-label") }}
+                            {{ blynk_device_form.virtual_pin_power(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ blynk_device_form.virtual_pin_energy.label(class="form-label") }}
+                            {{ blynk_device_form.virtual_pin_energy(class="form-control") }}
+                        </div>
+                    </div>
+                    {{ blynk_device_form.submit(class="btn btn-primary w-100") }}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <h1 class="mt-4">Registered Devices</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card" style="background: #fff; color: #23272f; border: 1px solid #e3e8ee; box-shadow: 0 4px 24px rgba(40,40,80,0.07);">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #fff; color: #23272f; border-bottom: 1px solid #e3e8ee;">
+                    <h3>Device List</h3>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBlynkDeviceModal">
+                        Register Blynk Device
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+<table class="table table-striped" style="background: #fff; color: #23272f;">
+                        <thead>
+                            <tr>
+                                <th>Device Name</th>
+                                <th>Blynk Token</th>
+                                <th>Virtual Pins</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in blynk_devices %}
+                            <tr>
+                                <td>{{ device.device_name }}</td>
+                                <td>{{ device.auth_token[:10] }}...</td>
+                                <td>V0:{{ device.virtual_pin_voltage }}, V1:{{ device.virtual_pin_current }}, V2:{{ device.virtual_pin_power }}, V3:{{ device.virtual_pin_energy }}</td>
+                                <td>-</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger">Remove</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

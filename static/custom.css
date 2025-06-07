@@ -1,0 +1,232 @@
+/* Simple, aesthetic, modern UI */
+
+.power-advice-module {
+    background: #e7f3fc;
+    border: 1px solid #b6e0fe;
+    border-radius: 0.5rem;
+    color: #23272f;
+    padding: 0.7rem 1.2rem;
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
+    min-height: 48px;
+}
+body, html {
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    background: #f4f6fb;
+    color: #23272f;
+    margin: 0;
+    padding: 0;
+}
+
+.card, .modern-glass {
+    background: #fff;
+    border-radius: 1.1rem;
+    box-shadow: 0 4px 24px rgba(40,40,80,0.07); /* No green or neon shadows */
+    border: 1px solid #e3e8ee; /* No green borders */
+    margin-bottom: 2.2rem;
+    padding: 1.2rem 1.8rem;
+    color: #23272f;
+}
+.card-header, .modern-glass .card-header {
+    background: #e3e8ee;
+    border-radius: 1.1rem 1.1rem 0 0;
+    border-bottom: 1px solid #e0e4ea;
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: #23272f;
+    padding: 1.1rem 1.8rem;
+    letter-spacing: 0.02em;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #23272f;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+}
+
+.form-control {
+    border-radius: 0.6rem;
+    border: 1px solid #e3e8ee; /* No green borders */
+    padding: 0.8rem 1.1rem;
+    font-size: 1rem;
+    background: #f8fafc;
+    color: #23272f;
+    box-shadow: none;
+    transition: border 0.15s, box-shadow 0.15s;
+}
+.form-control:focus {
+    border: 1.5px solid #2563eb;
+    background: #f4f6fb;
+    color: #23272f;
+    box-shadow: 0 0 0 2px #e3e8ee;
+}
+
+.btn-primary {
+    background: #2563eb;
+    border: none;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    padding: 0.7rem 1.5rem;
+    font-size: 1.1rem;
+    color: #fff;
+    box-shadow: none;
+    transition: background 0.15s;
+}
+.btn-primary:hover, .btn-primary:focus {
+    background: #1743ae;
+    color: #fff;
+}
+
+/* Remove old neon/sci-fi styles */
+.neon-card, .futuristic-header, .text-neon, .neon-avatar, .glass-card {
+    display: unset !important;
+    background: unset !important;
+    box-shadow: unset !important;
+    border: unset !important;
+    color: unset !important;
+    text-shadow: unset !important;
+    filter: unset !important;
+}
+/* Remove empty or malformed rulesets and fix any unclosed braces */
+
+/* Keep existing styles for specific elements */
+.carbon-offset-body {
+    background: linear-gradient(135deg, #e0e7ff 0%, #fff 100%);
+    min-height: 100vh;
+}
+.sidebar {
+    background: #212529 !important;
+    color: #fff;
+    box-shadow: 2px 0 10px rgba(33,37,41,0.1);
+}
+.sidebar .nav-link, .sidebar h5, .sidebar .rounded-circle, .sidebar .bg-secondary {
+    color: #fff !important;
+}
+.sidebar .nav-link.active {
+    background: #0d6efd;
+    color: #fff !important;
+    border-radius: 8px;
+}
+.sidebar .nav-link:hover {
+    background: #495057;
+    color: #fff !important;
+    border-radius: 8px;
+}
+.card {
+    box-shadow: 0 4px 24px rgba(13,110,253,0.10), 0 1.5px 6px rgba(0,0,0,0.03);
+    border-radius: 16px;
+    border: none;
+}
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
+body {
+    font-family: 'Orbitron', 'Segoe UI', 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+    color: #e0e7ff;
+    min-height: 100vh;
+    letter-spacing: 0.5px;
+}
+
+.sidebar {
+    background: #23272f !important;
+    color: #fff;
+    box-shadow: 2px 0 10px rgba(33,37,41,0.08);
+    border-right: 2px solid #e3e8ee;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+.sidebar .nav-link, .sidebar h5, .sidebar .rounded-circle, .sidebar .bg-secondary {
+    color: #fff !important;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    text-shadow: none;
+}
+.sidebar .nav-link.active {
+    background: #2563eb;
+    color: #fff !important;
+    border-radius: 8px;
+    box-shadow: 0 0 12px #2563eb33;
+}
+.sidebar .nav-link:hover {
+    background: #495057;
+    color: #fff !important;
+    border-radius: 8px;
+    box-shadow: none;
+    transition: all 0.25s;
+}
+
+.card {
+    box-shadow: 0 4px 24px rgba(40,40,80,0.07), 0 1.5px 6px rgba(0,0,0,0.03);
+    border-radius: 16px;
+    border: 1px solid #e3e8ee;
+    background: #fff;
+    animation: slideIn 0.7s cubic-bezier(0.77,0,0.175,1);
+}
+@keyframes slideIn {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.card-header {
+    background: #f8fafc;
+    color: #23272f;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: none;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    text-shadow: none;
+}
+.card-footer {
+    background: #232526;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+.btn-danger, .btn-danger:focus, .btn-danger:active {
+    background: #ff073a !important;
+    border: 2px solid #ff073a !important;
+    color: #fff !important;
+    box-shadow: 0 0 16px #ff073a;
+    animation: pulse 1.2s infinite alternate;
+}
+@keyframes pulse {
+    from { box-shadow: 0 0 8px #ff073a, 0 0 0 #fff0; }
+    to { box-shadow: 0 0 24px #ff073a, 0 0 12px #ff073a33; }
+}
+.btn-danger:hover {
+    background: #fff;
+    color: #ff073a !important;
+    border: 2px solid #ff073a !important;
+    box-shadow: 0 0 24px #ff073a, 0 0 12px #ff073a33;
+    transition: all 0.25s;
+}
+
+    background: linear-gradient(90deg, #0d6efd 0%, #6c63ff 100%);
+    color: #fff;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+.card-footer {
+    background: #f8f9fa;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+.carbon-offset-box {
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    border-radius: 18px;
+    box-shadow: 0 2px 20px 0 #0d6efd22;
+    padding: 1.5rem 2rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    font-size: 1.15rem;
+}
+.carbon-offset-box ul {
+    margin-left: 1.5rem;
+}
+.carbon-offset-box a {
+    color: #0d6efd;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.carbon-offset-box a:hover {
+    color: #dd2476;
+}
+/* Add more energetic styles as needed */
