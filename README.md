@@ -29,8 +29,13 @@ A web application to monitor and manage electricity usage in real-time, track de
    ```
 5. Run the application
    ```bash
+   python run.py
+   ```
+   or
+   ```bash
    flask run
    ```
+   > **Note:** For this project, running `python run.py` is recommended. If you use `flask run`, ensure your environment variable `FLASK_APP` is set to `run.py`.
 
 The app will be available at http://localhost:5000
 
