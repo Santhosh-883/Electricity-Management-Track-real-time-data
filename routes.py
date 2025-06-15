@@ -83,7 +83,11 @@ def device_state():
 # Voltage/Current API
 @electricity_bp.route('/api/voltage_current', methods=['GET'])
 def voltage_current():
-    token = "sGa2Ws1F_FjLjdZYWB-zk4Wf2kjCozkG"
+    device_id = request.args.get('device_id')
+    device = BlynkDevice.query.get(device_id)
+    if not device:
+        return jsonify({"voltage": None, "current": None}), 404
+    token = device.auth_token
     url_v0 = f"https://blr1.blynk.cloud/external/api/get?token={token}&V0"
     url_v1 = f"https://blr1.blynk.cloud/external/api/get?token={token}&V1"
     try:
