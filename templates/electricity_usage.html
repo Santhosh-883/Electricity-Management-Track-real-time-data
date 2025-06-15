@@ -70,7 +70,7 @@
 </style>
                                 <div class="card-body text-center">
                                     <h5>Voltage</h5>
-                                    <h3 id="voltage">{{ blynk_data.voltage or 'N/A' }} V</h3>
+                                    <h3 id="voltage">-- V</h3>
                                 </div>
                             </div>
                         </div>
@@ -78,7 +78,7 @@
                             <div class="card usage-card-modern">
                                 <div class="card-body text-center">
                                     <h5>Current</h5>
-                                    <h3 id="current">{{ blynk_data.current or 'N/A' }} A</h3>
+                                    <h3 id="current">-- A</h3>
                                 </div>
                             </div>
                         </div>
@@ -535,8 +535,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateData() {
         const selectedDevice = document.querySelector('select[name="selected_device"]').value;
         const dataCards = [
-            { id: 'voltage', unit: 'V', defaultValue: 0 },
-            { id: 'current', unit: 'A', defaultValue: 0 },
+            { id: 'voltage', unit: 'V', defaultValue: '--' },
+            { id: 'current', unit: 'A', defaultValue: '--' },
             { id: 'power', unit: 'W', defaultValue: 0 },
             { id: 'energy', unit: 'kWh', defaultValue: 0 }
         ];
@@ -610,4 +610,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+<script src="{{ url_for('static', filename='js/electricity_usage_device_select.js') }}"></script>
+<!-- Removed legacy auto-fetch JS; voltage/current are now only fetched after device selection -->
 {% endblock %}
