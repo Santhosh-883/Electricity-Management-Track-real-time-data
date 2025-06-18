@@ -203,10 +203,22 @@ def get_power_advice(power):
             "message": "🟢 Low power usage. All systems running efficiently."
         }
 
+from requests.exceptions import Timeout, ConnectionError
+
 @electricity_bp.route('/api/power_advice', methods=['GET'])
 def power_advice():
-    token = "sGa2Ws1F_FjLjdZYWB-zk4Wf2kjCozkG"
-    url = f"https://blr1.blynk.cloud/external/api/get?token={token}&V2"  # Assume V2 is power
+    device_id = request.args.get('device_id')
+    device = None
+    if device_id:
+        device = BlynkDevice.query.get(device_id)
+    if not device:
+        # Fallback to first device for the current user if available
+        if current_user.is_authenticated:
+            device = BlynkDevice.query.filter_by(user_id=current_user.id).first()
+    if not device:
+        return jsonify({"status": "UNKNOWN", "message": "No device found for power advice.", "power": None}), 404
+    token = device.auth_token
+    url = f"https://blr1.blynk.cloud/external/api/get?token={token}&V2"  # V2 is power
     try:
         resp = requests.get(url, timeout=5)
         if resp.status_code == 200:
@@ -218,9 +230,13 @@ def power_advice():
             advice["power"] = power
             return jsonify(advice)
         else:
-            return jsonify({"status": "UNKNOWN", "message": "Could not fetch power data.", "power": None}), 500
+            return jsonify({"status": "UNKNOWN", "message": "Could not fetch power data from cloud.", "power": None}), 500
+    except Timeout:
+        return jsonify({"status": "UNKNOWN", "message": "Blynk cloud timed out. Please try again later.", "power": None}), 504
+    except ConnectionError:
+        return jsonify({"status": "UNKNOWN", "message": "Cannot connect to Blynk cloud. Check your network.", "power": None}), 502
     except Exception:
-        return jsonify({"status": "UNKNOWN", "message": "Could not fetch power data.", "power": None}), 500
+        return jsonify({"status": "UNKNOWN", "message": "An unexpected error occurred while fetching power advice.", "power": None}), 500
 
 @electricity_bp.route('/api/delete_device/<int:device_id>', methods=['POST'])
 def delete_device(device_id):

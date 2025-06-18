@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(currentEl) currentEl.textContent = '-- A';
                 return;
             }
-            fetch(`/api/voltage_current?device_id=${deviceId}`)
+            fetch(`/electricity/api/voltage_current?device_id=${deviceId}`)
                 .then(response => response.json())
                 .then(data => {
                     if(voltageEl) voltageEl.textContent = data.voltage !== null ? `${data.voltage} V` : '-- V';

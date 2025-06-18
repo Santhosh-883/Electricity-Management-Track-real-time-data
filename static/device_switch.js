@@ -28,21 +28,25 @@ function updateDeviceState() {
 
 document.addEventListener('DOMContentLoaded', function() {
     function updateVoltageCurrent() {
-        fetch('/electricity/api/voltage_current')
-            .then(r => r.json())
-            .then(data => {
-                const volt = document.getElementById('voltage-value');
-                const curr = document.getElementById('current-value');
-                if (volt) volt.textContent = (data.voltage !== null && !isNaN(data.voltage)) ? data.voltage.toFixed(1) : '--';
-                if (curr) curr.textContent = (data.current !== null && !isNaN(data.current)) ? data.current.toFixed(2) : '--';
-            })
-            .catch(() => {
-                const volt = document.getElementById('voltage-value');
-                const curr = document.getElementById('current-value');
-                if (volt) volt.textContent = '--';
-                if (curr) curr.textContent = '--';
-            });
-    }
+    const deviceSelect = document.querySelector('select[name="selected_device"]');
+    const deviceId = deviceSelect ? deviceSelect.value : null;
+    let url = '/electricity/api/voltage_current';
+    if (deviceId) url += `?device_id=${deviceId}`;
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            const volt = document.getElementById('voltage-value');
+            const curr = document.getElementById('current-value');
+            if (volt) volt.textContent = (data.voltage !== null && !isNaN(data.voltage)) ? data.voltage.toFixed(1) : '--';
+            if (curr) curr.textContent = (data.current !== null && !isNaN(data.current)) ? data.current.toFixed(2) : '--';
+        })
+        .catch(() => {
+            const volt = document.getElementById('voltage-value');
+            const curr = document.getElementById('current-value');
+            if (volt) volt.textContent = '--';
+            if (curr) curr.textContent = '--';
+        });
+}
     updateVoltageCurrent();
     setInterval(updateVoltageCurrent, 2000);
 
