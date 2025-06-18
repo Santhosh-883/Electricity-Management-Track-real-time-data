@@ -126,9 +126,11 @@ def electricity_bills():
             'cost_breakdown': bill.cost_breakdown
         })
     
+    solar_rating = getattr(current_user, 'solar_rating', None)
     # Render electricity bills template
     return render_template(
         'electricity_bills.html', 
+        solar_rating=solar_rating,
         account_number=current_user.account_number,
         bills=bill_data,
         preferences_module=None,  # Placeholder for future preferences module

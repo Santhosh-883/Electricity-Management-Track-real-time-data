@@ -197,12 +197,23 @@ def electricity_bills():
     bills = ElectricityBill.query.filter_by(user_id=current_user.id).all()
     return render_template('electricity_bills.html', bills=bills, account_number=current_user.account_number)
 
-@app.route('/devices')
+@app.route('/devices', methods=['GET', 'POST'])
 @login_required
 def devices():
     form = BlynkDeviceForm()
+    if request.method == 'POST' and 'solar_rating' in request.form:
+        try:
+            rating = float(request.form['solar_rating'])
+            current_user.solar_rating = rating
+            db.session.commit()
+            flash('Solar panel rating saved!', 'success')
+        except Exception:
+            flash('Invalid input for solar panel rating.', 'danger')
+        return redirect(url_for('devices'))
     blynk_devices = BlynkDevice.query.filter_by(user_id=current_user.id).all()
-    return render_template('devices.html', blynk_device_form=form, blynk_devices=blynk_devices)
+    solar_rating = getattr(current_user, 'solar_rating', None)
+    return render_template('devices.html', blynk_device_form=form, blynk_devices=blynk_devices, solar_rating=solar_rating)
+
 
 @app.route('/remove-device/<int:device_id>', methods=['POST'])
 @login_required
@@ -360,6 +371,83 @@ def download_logs(device_id):
         flash('No logs found for this device.', 'warning')
         return redirect(url_for('electricity_usage', selected_device=device_id))
     return send_file(log_file, as_attachment=True)
+
+@app.route('/remove_solar_panel', methods=['POST'])
+@login_required
+def remove_solar_panel():
+    current_user.solar_rating = None
+    db.session.commit()
+    flash('Solar panel removed!', 'info')
+    return redirect(url_for('devices'))
+
+@app.route('/add_test_bill')
+@login_required
+def add_test_bill():
+    from datetime import datetime
+    # Add a test bill for the current user
+    bill = ElectricityBill(
+        user_id=current_user.id,
+        date=datetime.now().date(),
+        total_energy=123.4,
+        total_cost=567.8,
+        co2_emission=98.7,
+        cost_breakdown=None
+    )
+    db.session.add(bill)
+    db.session.commit()
+    flash('Test bill added!', 'success')
+    return redirect(url_for('electricity_bills'))
+
+@app.route('/add_screenshot_test_bill')
+@login_required
+def add_screenshot_test_bill():
+    from datetime import datetime
+    # Data from screenshot: Consumed=700Wh, Solar=50Wh, Grid=650Wh, Cost=3.59, Solar offset=0.47, Final=3.12, CO2=0.57kg, CO2 saved=0.04kg
+    bill = ElectricityBill(
+        user_id=current_user.id,
+        date=datetime.now().date(),
+        total_energy=0.7,  # 700 Wh = 0.7 kWh
+        total_cost=3.59,
+        co2_emission=0.57,
+        cost_breakdown=None
+    )
+    db.session.add(bill)
+    db.session.commit()
+    flash('Screenshot-style test bill added!', 'success')
+    return redirect(url_for('electricity_bills'))
+
+@app.route('/test_push')
+@login_required
+def test_push():
+    import os
+    import firebase_admin
+    from firebase_admin import credentials, messaging
+    # Only initialize once
+    if not firebase_admin._apps:
+        cred_path = os.environ.get('FIREBASE_CRED_PATH')
+        if not cred_path or not os.path.exists(cred_path):
+            flash('Firebase credentials not found. Set FIREBASE_CRED_PATH.', 'danger')
+            return redirect(url_for('electricity_bills'))
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred)
+    # You must provide your device's FCM token here
+    registration_token = os.environ.get('TEST_FCM_TOKEN')
+    if not registration_token:
+        flash('Set TEST_FCM_TOKEN env variable with your device FCM token.', 'danger')
+        return redirect(url_for('electricity_bills'))
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title='Test Notification',
+            body='This is a test push notification from your Flask app!',
+        ),
+        token=registration_token,
+    )
+    try:
+        response = messaging.send(message)
+        flash('Push notification sent! Response: ' + response, 'success')
+    except Exception as e:
+        flash('Failed to send push notification: ' + str(e), 'danger')
+    return redirect(url_for('electricity_bills'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

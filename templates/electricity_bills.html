@@ -37,6 +37,56 @@
     showNextTip();
     setInterval(showNextTip, 10000);
 </script>
+{% set selected_bill = bills[0] if bills else None %}
+<div class="card mb-4" style="max-width: 650px; margin: 0 auto; box-shadow: 0 4px 16px rgba(40,40,80,0.10);">
+    <div class="card-header bg-white border-bottom-0">
+        <h4 class="mb-0" style="color: #6c2eb7; font-weight: 700;">Day Smart Energy Report</h4>
+    </div>
+    <div class="card-body">
+        {% if selected_bill %}
+        <div class="row mb-2">
+            <div class="col-md-6"><b>Total Energy Consumed:</b> {{ (selected_bill.total_energy * 1000)|round(2) }} Wh</div>
+            <div class="col-md-6"><b>Solar Energy Contribution:</b> {{ (solar_rating * 1000)|round(2) if solar_rating else 0 }} Wh</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6"><b>Grid Energy Used:</b> {{ ((selected_bill.total_energy - (solar_rating if solar_rating else 0)) * 1000)|round(2) }} Wh</div>
+        </div>
+        <table class="table table-bordered" style="background: #fff;">
+            <thead class="table-light">
+                <tr><th>Metric</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Total Cost (without solar)</td><td>₹{{ selected_bill.total_cost|round(2) }}</td></tr>
+                <tr><td>Solar Offset Cost (savings)</td><td>₹{{ (solar_rating * 7)|round(2) if solar_rating else 0 }}</td></tr>
+                <tr><td style="font-weight:700;">Final Payable Cost</td><td style="color: #28a745; font-weight:700;">₹{{ (selected_bill.total_cost - (solar_rating * 7))|round(2) if solar_rating else selected_bill.total_cost|round(2) }}</td></tr>
+                <tr><td>CO₂ Emission (Total)</td><td>{{ selected_bill.co2_emission|round(2) }} kg</td></tr>
+                <tr><td style="font-weight:700;">CO₂ Saved by Solar</td><td style="color: #28a745; font-weight:700;">{{ (solar_rating * 0.8)|round(2) if solar_rating else 0 }} kg</td></tr>
+            </tbody>
+        </table>
+        {% else %}
+        <div class="row mb-2">
+            <div class="col-md-6"><b>Total Energy Consumed:</b> 700.00 Wh</div>
+            <div class="col-md-6"><b>Solar Energy Contribution:</b> 50.00 Wh</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6"><b>Grid Energy Used:</b> 650.00 Wh</div>
+        </div>
+        <table class="table table-bordered" style="background: #fff;">
+            <thead class="table-light">
+                <tr><th>Metric</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Total Cost (without solar)</td><td>₹3.59</td></tr>
+                <tr><td>Solar Offset Cost (savings)</td><td>₹0.47</td></tr>
+                <tr><td style="font-weight:700;">Final Payable Cost</td><td style="color: #28a745; font-weight:700;">₹3.12</td></tr>
+                <tr><td>CO₂ Emission (Total)</td><td>0.57 kg</td></tr>
+                <tr><td style="font-weight:700;">CO₂ Saved by Solar</td><td style="color: #28a745; font-weight:700;">0.04 kg</td></tr>
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+
 <div class="card" style="background: #fff; color: #23272f; border: 1px solid #e3e8ee; box-shadow: 0 4px 24px rgba(40,40,80,0.07);">
                 <div class="card-header d-flex justify-content-between align-items-center" style="background: #fff; color: #23272f; border-bottom: 1px solid #e3e8ee;">
                     <h3 class="mb-0">Billing History</h3>
@@ -58,14 +108,38 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="animate__animated animate__fadeIn">
-    <td>{% set today = cycler(['2025-05-02']) %}{{ today.next() }}</td>
-    <td>200.00</td>
-    <td>&#8377;235.00</td>
-    <td>—</td>
-    <td><span style="color: #6c757d;">No breakdown</span></td>
-</tr>
-                        </tbody>
+    {% if bills %}
+        {% for bill in bills %}
+        {% set solar_gen = (solar_rating * 4 * 30) if solar_rating else 0 %}
+        {% set net_energy = (bill.total_energy - solar_gen) if solar_rating else bill.total_energy %}
+        {% set net_energy = net_energy if net_energy > 0 else 0 %}
+        {% set net_cost = (bill.total_cost - (solar_gen * 7)) if solar_rating else bill.total_cost %}
+        {% set net_cost = net_cost if net_cost > 0 else 0 %}
+        {% set solar_carbon = (solar_gen * 0.8) if solar_rating else 0 %}
+        <tr class="animate__animated animate__fadeIn">
+            <td>{{ bill.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ net_energy|round(2) }}</td>
+            <td>&#8377;{{ net_cost|round(2) }}</td>
+            <td>
+                {% if solar_rating %}
+                    <span title="{{ bill.co2_emission|round(2) }} kg before solar">{{ (bill.co2_emission - solar_carbon)|round(2) if (bill.co2_emission - solar_carbon) > 0 else 0 }} (saved {{ solar_carbon|round(2) }} kg)</span>
+                {% else %}
+                    {{ bill.co2_emission|round(2) }}
+                {% endif %}
+            </td>
+            <td>
+                {% if bill.cost_breakdown and bill.cost_breakdown|length > 0 %}
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#costBreakdownModal{{ loop.index }}">Breakdown</a>
+                {% else %}
+                    <span style="color: #6c757d;">No breakdown</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr><td colspan="5" class="text-center text-muted">No billing history found.</td></tr>
+    {% endif %}
+</tbody>
                     </table>
 </div>
                 </div>

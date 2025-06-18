@@ -64,6 +64,8 @@ def generate_profile_picture_filename(username, file):
     return secure_filename(unique_filename)
 
 class User(UserMixin, db.Model):
+    solar_rating = db.Column(db.Float, nullable=True)  # Solar panel rating (kW)
+    solar_generation = db.Column(db.Float, nullable=True)  # Estimated daily solar generation (kWh)
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
