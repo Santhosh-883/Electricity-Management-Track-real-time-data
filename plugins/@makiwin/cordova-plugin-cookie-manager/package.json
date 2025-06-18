@@ -1,0 +1,32 @@
+{
+  "version": "0.0.2",
+  "name": "cordova-plugin-cookie-manager",
+  "cordova_name": "Cookie Manager",
+  "description": "Provides methods to manage cookies from your app's JavaScript code. At the time of writing, the only available method in this plugin clears all cookies.",
+  "license": "Apache 2.0",
+  "keywords": [
+    "cordova",
+    "phonegap",
+    "cookies",
+    "cookie",
+    "manager",
+    "clear"
+  ],
+  "engines": [],
+  "cordova": {
+    "id": "cordova-plugin-cookie-manager",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teunsteenbekkers/cordova-plugin-cookie-manager.git"
+  },
+  "author": "Ernests Karlsons",
+  "bugs": {
+    "url": "https://github.com/teunsteenbekkers/cordova-plugin-cookie-manager/issues"
+  },
+  "homepage": "https://github.com/teunsteenbekkers/cordova-plugin-cookie-manager"
+}

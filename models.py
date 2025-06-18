@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 import csv
 
@@ -245,7 +245,7 @@ def assign_badges_for_user(user):
     """
     Assign badges to user based on energy usage patterns. This is a basic version; expand as needed.
     """
-    from .models import BlynkDataLog, BlynkDevice
+    from models import BlynkDataLog, BlynkDevice
     # Device Linker: Linked at least one remote device
     if BlynkDevice.query.filter_by(user_id=user.id).count() > 0:
         if not UserBadge.query.filter_by(user_id=user.id, badge_name='Device Linker').first():
@@ -257,9 +257,16 @@ def assign_badges_for_user(user):
                 description='🌐 Gorgeous! Linked your first remote device. Unlock the power of smart energy!'
             )
             db.session.add(badge)
-    # Gold Saver: Saved most energy (lowest month usage) in last 3 months
-    month_ago = datetime.utcnow().replace(day=1)
-    month_usage = db.session.query(func.sum(BlynkDataLog.energy)).filter(BlynkDataLog.user_id==user.id, BlynkDataLog.timestamp>=month_ago).scalar() or 0
+
+    # Example: Gold Saver badge for low monthly energy usage
+    month_ago = datetime.utcnow() - timedelta(days=30)
+    # Calculate monthly usage for all devices owned by this user
+    month_usage = (
+        db.session.query(func.sum(BlynkDataLog.energy))
+        .join(BlynkDevice, BlynkDataLog.device_id == BlynkDevice.id)
+        .filter(BlynkDevice.user_id == user.id, BlynkDataLog.timestamp >= month_ago)
+        .scalar() or 0
+    )
     if month_usage < 50:  # Example threshold
         if not UserBadge.query.filter_by(user_id=user.id, badge_name='Gold Saver').first():
             badge = UserBadge(user_id=user.id, badge_name='Gold Saver', badge_icon='star-fill', badge_color='warning', description='🏅 Gold Saver: You achieved outstanding energy savings this month!')
