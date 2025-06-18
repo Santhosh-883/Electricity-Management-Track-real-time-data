@@ -1,6 +1,7 @@
 pip>=24.0
 setuptools>=70.0.0
 wheel>=0.43.0
+Bootstrap-Flask>=2.3.0
 
 Flask>=3.0.3
 Flask-Login==0.6.3
