@@ -3,8 +3,51 @@ from flask_login import login_required, current_user
 from models import db, User, ElectricityBill, BlynkDevice, assign_badges_for_user, get_user_badges, award_signup_badge
 import requests
 
+# --- Firebase Admin SDK for Push Notifications ---
+import os
+import firebase_admin
+from firebase_admin import credentials, messaging
+
+FIREBASE_CRED_PATH = os.environ.get('FIREBASE_CRED_PATH', 'firebase-adminsdk.json')
+if not firebase_admin._apps:
+    if os.path.exists(FIREBASE_CRED_PATH):
+        cred = credentials.Certificate(FIREBASE_CRED_PATH)
+        firebase_admin.initialize_app(cred)
+    else:
+        print('WARNING: Firebase credential file not found, push notifications will not work.')
+
+def send_push_notification(token, title, body):
+    if not token or not firebase_admin._apps:
+        print('No FCM token or Firebase not initialized')
+        return
+    try:
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body
+            ),
+            token=token
+        )
+        response = messaging.send(message)
+        print('Push notification sent:', response)
+    except Exception as e:
+        print('Error sending push notification:', e)
+
 # Create a blueprint for electricity-related routes
 electricity_bp = Blueprint('electricity', __name__)
+
+@electricity_bp.route('/set_v2_limit', methods=['POST'])
+@login_required
+def set_v2_limit():
+    try:
+        v2_limit = float(request.form.get('v2_limit'))
+        current_user.v2_limit = v2_limit
+        db.session.commit()
+        flash(f'V2 limit set to {v2_limit} W', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error setting V2 limit: {e}', 'danger')
+    return redirect(url_for('electricity.electricity_usage'))
 
 @electricity_bp.route('/electricity_usage')
 @login_required
@@ -18,6 +61,43 @@ def electricity_usage():
         badges.append('Welcome Aboard')
     # Fetch any other required data for the template (e.g., usage, advice)
     return render_template('electricity_usage.html', badges=badges)
+
+# AJAX endpoint for real-time usage data (POST)
+@electricity_bp.route('/electricity-usage', methods=['GET', 'POST'])
+@login_required
+def electricity_usage_data():
+    blynk_devices = BlynkDevice.query.filter_by(user_id=current_user.id).all()
+    selected_device_id = request.args.get('selected_device') or request.form.get('selected_device')
+    blynk_data = None
+    limit_exceeded = False
+
+    if selected_device_id:
+        selected_device = BlynkDevice.query.get(selected_device_id)
+        if selected_device:
+            blynk_data = selected_device.fetch_blynk_data()
+            # Check V2 pin (power) vs user limit
+            v2_value = blynk_data.get('power')
+            user_limit = current_user.v2_limit
+            if user_limit is not None and v2_value is not None and float(v2_value) > float(user_limit):
+                limit_exceeded = True
+                # Push notification if user has FCM token
+                if current_user.fcm_token:
+                    send_push_notification(
+                        current_user.fcm_token,
+                        'SmartWatt Alert',
+                        f'Your device power (V2) exceeded your set limit of {user_limit} W!'
+                    )
+
+    # If it's an AJAX request, return JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.method == 'POST':
+        resp = blynk_data or {}
+        resp['limit_exceeded'] = limit_exceeded
+        return jsonify(resp)
+
+    return render_template('electricity_usage.html', 
+                           blynk_devices=blynk_devices, 
+                           selected_device_id=int(selected_device_id) if selected_device_id and str(selected_device_id).isdigit() else None,
+                           blynk_data=blynk_data)
 
 @electricity_bp.route('/electricity_bills')
 @login_required

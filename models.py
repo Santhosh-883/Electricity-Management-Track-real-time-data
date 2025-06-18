@@ -72,6 +72,8 @@ class User(UserMixin, db.Model):
     profile_picture = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
+    v2_limit = db.Column(db.Float, nullable=True)  # User-settable V2 pin limit
+    fcm_token = db.Column(db.String(255), nullable=True)  # For push notifications
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

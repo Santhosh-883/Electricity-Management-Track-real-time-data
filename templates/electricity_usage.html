@@ -14,6 +14,18 @@
     <div class="alert alert-warning mt-4">No devices available. Please register a Blynk device to view and download logs.</div>
 {% endif %}
 <div class="row mb-4">
+    <!-- V2 Limit Setter -->
+    <div class="col-12 mb-3">
+      <form id="v2-limit-form" method="POST" action="{{ url_for('set_v2_limit') }}" class="d-flex align-items-center" style="gap:12px;">
+        <label for="v2_limit" class="form-label mb-0" style="font-weight:600;">V2 Limit (W):</label>
+        <input type="number" step="0.01" min="0" name="v2_limit" id="v2_limit" class="form-control" style="width:120px;" value="{{ current_user.v2_limit or '' }}" required>
+        <button type="submit" class="btn btn-outline-primary">Save Limit</button>
+        {% if current_user.v2_limit %}
+          <span class="text-success ms-2">Current Limit: {{ current_user.v2_limit }} W</span>
+        {% endif %}
+      </form>
+    </div>
+    <!-- End V2 Limit Setter -->
     <div class="col-12">
         <div class="card" style="background: #fff; color: #23272f; border: 1px solid #e3e8ee; box-shadow: 0 4px 24px rgba(40,40,80,0.07);">
             <div class="card-header" style="background: #f8fafc; color: #23272f; border-bottom: 1px solid #e3e8ee;">
@@ -602,6 +614,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const dataUpdateInterval = setInterval(updateData, UPDATE_INTERVAL);
+
+    // --- Limit Exceeded Modal Logic ---
+    // Create the modal HTML
+    const limitModalHtml = `
+    <div class="modal fade" id="limitExceededModal" tabindex="-1" aria-labelledby="limitExceededLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="limitExceededLabel">Alert: Limit Exceeded</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Your device's power (V2) has exceeded your set limit!</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', limitModalHtml);
+    let limitModal = null;
+    document.addEventListener('DOMContentLoaded', function () {
+      limitModal = new bootstrap.Modal(document.getElementById('limitExceededModal'));
+    });
+
+    // Patch updateData to show modal if limit_exceeded
+    const originalUpdateData = updateData;
+    window.updateData = function() {
+      const selectedDevice = document.querySelector('select[name="selected_device"]').value;
+      fetch(`/electricity-usage?selected_device=${selectedDevice}`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.limit_exceeded) {
+          if (limitModal) limitModal.show();
+        }
+        // Call original updateData logic (update cards, charts, etc.)
+        if (typeof originalUpdateData === 'function') {
+          originalUpdateData();
+        }
+      })
+      .catch(err => {
+        if (typeof originalUpdateData === 'function') {
+          originalUpdateData();
+        }
+      });
+    }
 
     // Initial load
     updateData();
